@@ -92,27 +92,30 @@ horizontal board player totalRowNum
 vertical _ _ 0 = False
 vertical board player totalColNum
 -- checkHoriz is being passed getRow totalRownum from map given by filtering out player's tiles from given board
-	| checkHoriz (M.toList (getColumn (filterPlayers (boardTiles board) player) totalColNum)) player = True
+	| checkHoriz (M.toList (getColumn (boardTiles board) totalColNum)) player = True
 	| otherwise = vertical board player (totalColNum - 1)
 
 diagonal _ _ 0 = False
-diagonal board player totalRowNum
+diagonal board player totalRowNun
 -- checkHoriz is being passed getRow totalRownum from map given by filtering out player's tiles from given board
-	| checkDiag (M.toList (filterPlayers (boardTiles board) player) ) player (boardTiles board) = True
+	| checkDiag (M.toList (filterPlayers (boardTiles board) player) ) player board = True
 	| otherwise = diagonal board player (totalRowNum - 1)
 
 checkDiag [] _ _ = False
-checkDiag (((x,y),z):t) p tiles 
-	| x == 0 && verRight (x,y) p tiles = hasDiagonal ((x,y), z) tiles 3 Nothing
+checkDiag (((y,x),z):t) p board 
+	| x == 0 && verRight (y,x) p (boardTiles board) = hasDiagonal ((y,x), z) board 3 R
+	| x == ((boardColumns board)-1) && verLeft (y,x) p (boardTiles board) = hasDiagonal ((y,x), z) board 3 L
+	| (verRight (y,x) p (boardTiles board)) = hasDiagonal ((y,x), z) board 3 (Just R)
+	| (verLeft (y,x) p (boardTiles board)) = hasDiagonal ((y,x), z) board 3 (Just L)
+	| otherwise = False
 
 
 hasDiagonal :: ((Integer, Integer), Player) -> Map (Integer, Integer) Player -> Integer -> Maybe Dir -> Bool
 hasDiagonal _ _ 0 _ = True
 hasDiagonal ((x,y),z) tiles n dir
-	| x == 0 && y < 3 && verRight (x,y) z tiles && dir == Nothing = hasDiagonal ((x+1, y+1), z) tiles (n-1) (Just R)
-	| x == 3 && y < 3 && verLeft (x,y) z tiles && dir == Nothing = hasDiagonal ((x-1, y+1), z) tiles (n-1) (Just L)
 	| dir == (Just R) && verRight (x,y) z tiles = hasDiagonal ((x+1, y+1), z) tiles (n-1) (Just R)
 	| dir == (Just L) && verLeft (x,y) z tiles = hasDiagonal ((x-1, y+1), z) tiles (n-1) (Just L)
+	| otherwise = False
 
 
 verRight (x,y) p boardTiles
@@ -126,9 +129,9 @@ verLeft (x,y) p boardTiles
 
 check :: Board -> Player -> Bool 
 check board player 
-	| horizontal board player 4 = True
-	| vertical board player 4 = True
-	| diagonal board player 4 = True
+	| horizontal board player (boardColumns board) = True
+	| vertical board player (boardRows board) = True
+	| diagonal board player (boardColumns board) = True
 	| otherwise = False
 
 whoWon :: Board -> Int
