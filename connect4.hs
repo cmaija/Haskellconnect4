@@ -52,7 +52,7 @@ showTile :: Maybe Player -> Char
 showTile Nothing  = ' '
 showTile (Just X) = 'X'
 showTile (Just O) = 'O'
-showTile (Just G) = 'G'
+showTile (Just G) = ' '
 
 get :: Integer -> Integer -> Board -> Maybe Player
 get row column = M.lookup (row, column) . boardTiles 
@@ -167,9 +167,9 @@ isLegalMove board col =
 
 hasFreeSpace :: Board -> Integer -> Bool
 hasFreeSpace board col 
-	| (M.lookup (col, 0) (boardTiles board)) == Just G = True
-	| (M.lookup (col, 0) (boardTiles board)) == Just X = False
-	| (M.lookup (col, 0) (boardTiles board)) == Just O = False
+	| (M.lookup (0, col) (boardTiles board)) == Just G = True
+	| (M.lookup (0, col) (boardTiles board)) == Just X = False
+	| (M.lookup (0, col) (boardTiles board)) == Just O = False
 	| otherwise = False
 
 moveReply :: Bool -> String 
@@ -203,7 +203,10 @@ findFreeRow board column row
 -- printBoard
 
 go :: Board -> IO ()
-go board = do
+go board
+	| whoWon board == 1 = putStrLn "Player One Wins!"
+    | whoWon board == 2 = putStrLn "Player Two Wins!"
+    | otherwise = do 
         col <- getMove (whosTurn board)
         legalMove <- isLegalMove board col
         let nextBoard  
@@ -211,13 +214,6 @@ go board = do
         	| otherwise = board
         putStrLn ("\n" ++ show nextBoard)
         go nextBoard
-
--- legal move = placeMove board col (whosTurn board)
-
-{- --| whoWon board == 1 = putStrLn "Player One Wins!"
---   | whoWon board == 2 = putStrLn "Player Two Wins!"| otherwise = 
- -}
-
 
 
 
