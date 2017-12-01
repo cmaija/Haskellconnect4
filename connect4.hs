@@ -168,6 +168,8 @@ isLegalMove board col =
 hasFreeSpace :: Board -> Integer -> Bool
 hasFreeSpace board col 
 	| (M.lookup (col, 0) (boardTiles board)) == Just G = True
+	| (M.lookup (col, 0) (boardTiles board)) == Just X = False
+	| (M.lookup (col, 0) (boardTiles board)) == Just O = False
 	| otherwise = False
 
 moveReply :: Bool -> String 
@@ -191,7 +193,9 @@ nextFreeRow board player column = findFreeRow board column ((boardRows board)-1)
 findFreeRow :: Board -> Integer -> Integer -> Integer  
 findFreeRow _ _ 0 = 0
 findFreeRow board column row 
-    | (M.lookup (column, row) (boardTiles board)) == Just G = row
+    | (M.lookup (row, column) (boardTiles board)) == Just G = row
+    | (M.lookup (row, column) (boardTiles board)) == Just X = findFreeRow board column (row-1)
+    | (M.lookup (row, column) (boardTiles board)) == Just O = findFreeRow board column (row-1)
 	| otherwise = findFreeRow board column (row-1)
 
 --TODO: implement
