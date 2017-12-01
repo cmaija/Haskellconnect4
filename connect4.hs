@@ -182,19 +182,17 @@ rows, starting at the largest row, and checking the value at current row, column
 Once we have the first free row, need to call update on map and create a new board with the new map.-}
 
 placeMove :: Board -> Integer -> Player -> Board 
-placeMove board col player = Board (boardRows board) (boardColumns board) (M.update isPlayer (col,row) (boardTiles board))
-	where isPlayer x = if x == G then Just player else Nothing
-	      row = nextFreeRow board player col
+placeMove board col player = Board (boardRows board) (boardColumns board) (M.insert (row,col) player (boardTiles board))
+	where row = nextFreeRow board player col
 
 nextFreeRow :: Board -> Player -> Integer -> Integer
-nextFreeRow _ _ 0 = 0 
-nextFreeRow board player column = findFreeRow board column (boardRows board)-1 
+nextFreeRow board player column = findFreeRow board column ((boardRows board)-1)
 
 findFreeRow :: Board -> Integer -> Integer -> Integer  
 findFreeRow _ _ 0 = 0
 findFreeRow board column row 
     | (M.lookup (column, row) (boardTiles board)) == Just G = row
-	| otherwise = findFreeRow board column row-1
+	| otherwise = findFreeRow board column (row-1)
 
 --TODO: implement
 -- isDraw
@@ -204,10 +202,11 @@ go :: Board -> IO ()
 go board = do
         col <- getMove (whosTurn board)
         legalMove <- isLegalMove board col
-        let nextBoard = if legalMove then board else board
+        let nextBoard  
+        	| legalMove = placeMove board col (whosTurn board)
+        	| otherwise = board
+        putStrLn ("\n" ++ show nextBoard)
         go nextBoard
-        --putStrLn ("\n" ++ show nextBoard)
-        --go nextBoard
 
 -- legal move = placeMove board col (whosTurn board)
 
