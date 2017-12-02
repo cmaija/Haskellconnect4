@@ -96,7 +96,7 @@ checkHoriz (x:t) p = False
 horizontal _ _ 0 = False
 horizontal board player totalRowNum
 -- checkHoriz is being passed getRow totalRownum from map given by filtering out player's tiles from given board
-	| checkHoriz (M.toList (getRow (filterPlayers (boardTiles board) player) totalRowNum)) player = True
+	| checkHoriz (M.toList (getRow (boardTiles board) totalRowNum)) player = True
 	| otherwise = horizontal board player (totalRowNum - 1)
 
 -- recurse over each row ** Probably have to change the fact that im filtering out one player 
@@ -109,7 +109,7 @@ vertical board player totalColNum
 diagonal _ _ 0 = False
 diagonal board player totalRowNum
 -- checkHoriz is being passed getRow totalRownum from map given by filtering out player's tiles from given board
-	| checkDiag (M.toList (filterPlayers (boardTiles board) player) ) player board = True
+	| checkDiag (M.toList (boardTiles board) ) player board = True
 	| otherwise = diagonal board player (totalRowNum - 1)
 
 checkDiag [] _ _ = False
@@ -187,10 +187,22 @@ getMoveAiGame player board
 			    Nothing -> putStrLn "Invalid number entered" >> getMoveAiGame player board
     | otherwise = 
     	do 
-    		return (getAiMove board)
+    		getAiMove board
   
-getAiMove :: Board -> Integer
-getAiMove board = 0
+getAiMove :: Board -> IO Integer
+getAiMove board = 
+	do
+		tile <- getPlayerOneTile board
+		col <- getCol tile
+		return col
+
+getCol :: ((Integer, Integer), Player) -> IO Integer
+getCol ((x, y), player) = do 
+	return y
+
+getPlayerOneTile :: Board -> IO ((Integer, Integer), Player)
+getPlayerOneTile board = do
+    return (last (M.toList (filterPlayers (boardTiles board) X)))
 
 getMove :: Player -> IO Integer
 getMove player = 
