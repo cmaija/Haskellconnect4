@@ -28,6 +28,8 @@ playerOTurn = Board 4 4 pXPlay
 
 colZeroFullBoard = Board 4 4 colZeroFull
 
+diagWinner = Board 4 4 leftUpRight
+
 data Dir = L | R
 	deriving (Eq, Ord, Enum)
  
@@ -96,25 +98,25 @@ vertical board player totalColNum
 	| otherwise = vertical board player (totalColNum - 1)
 
 diagonal _ _ 0 = False
-diagonal board player totalRowNun
+diagonal board player totalRowNum
 -- checkHoriz is being passed getRow totalRownum from map given by filtering out player's tiles from given board
 	| checkDiag (M.toList (filterPlayers (boardTiles board) player) ) player board = True
 	| otherwise = diagonal board player (totalRowNum - 1)
 
 checkDiag [] _ _ = False
 checkDiag (((y,x),z):t) p board 
-	| x == 0 && verRight (y,x) p (boardTiles board) = hasDiagonal ((y,x), z) board 3 R
-	| x == ((boardColumns board)-1) && verLeft (y,x) p (boardTiles board) = hasDiagonal ((y,x), z) board 3 L
+	| x == 0 && verRight (y,x) p (boardTiles board) = hasDiagonal ((y,x), z) board 3 (Just R)
+	| x == ((boardColumns board)-1) && verLeft (y,x) p (boardTiles board) = hasDiagonal ((y,x), z) board 3 (Just L)
 	| (verRight (y,x) p (boardTiles board)) = hasDiagonal ((y,x), z) board 3 (Just R)
 	| (verLeft (y,x) p (boardTiles board)) = hasDiagonal ((y,x), z) board 3 (Just L)
 	| otherwise = False
 
 
-hasDiagonal :: ((Integer, Integer), Player) -> Map (Integer, Integer) Player -> Integer -> Maybe Dir -> Bool
+hasDiagonal :: ((Integer, Integer), Player) -> Board -> Integer -> Maybe Dir -> Bool
 hasDiagonal _ _ 0 _ = True
-hasDiagonal ((x,y),z) tiles n dir
-	| dir == (Just R) && verRight (x,y) z tiles = hasDiagonal ((x+1, y+1), z) tiles (n-1) (Just R)
-	| dir == (Just L) && verLeft (x,y) z tiles = hasDiagonal ((x-1, y+1), z) tiles (n-1) (Just L)
+hasDiagonal ((x,y),z) board n dir
+	| dir == (Just R) && verRight (x,y) z (boardTiles board) = hasDiagonal ((x+1, y+1), z) board (n-1) (Just R)
+	| dir == (Just L) && verLeft (x,y) z (boardTiles board) = hasDiagonal ((x-1, y+1), z) board (n-1) (Just L)
 	| otherwise = False
 
 
