@@ -298,7 +298,7 @@ goAi board
         putStrLn ("\n" ++ show nextBoard)
         goAi nextBoard
 
-
+-- To play the game, call main
 main :: IO ()
 main = do
     putStrLn "One player: Type '1'"
