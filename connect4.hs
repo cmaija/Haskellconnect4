@@ -2,11 +2,11 @@ import           Data.Map   (Map)
 import qualified Data.Map   as M
 import           Data.Maybe (fromMaybe, listToMaybe, fromJust)
 import           Text.Read  (readMaybe)
+import           System.Random
 
 -- Data Types ---------------------------------------------------
 
 -- L represents checking Left when looking for diagonal wins, R for checking Right
-fullBoard = Board 4 4 full
 data Dir = L | R
 	deriving (Eq, Ord, Enum)
  
@@ -303,8 +303,13 @@ main :: IO ()
 main = do
     putStrLn "One player: Type '1'"
     putStrLn "Two players: Type '2'"
-    players <- getLine 
-    if (read players) == 2 then go (chooseSizeBoard 7 6) else goAi (chooseSizeBoard 7 6)
+    let numPlayers = 0
+    players <- getLine
+    case readMaybe players :: Maybe Integer of
+		Just x -> do
+			if x == 2 then go (chooseSizeBoard 7 6) else goAi (chooseSizeBoard 7 6)
+		Nothing -> putStrLn "Invalid number entered" >> main 
+    
 
 
 
