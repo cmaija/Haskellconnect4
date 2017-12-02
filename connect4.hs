@@ -1,39 +1,7 @@
-
-
 import           Data.Map   (Map)
 import qualified Data.Map   as M
 import           Data.Maybe (fromMaybe, listToMaybe, fromJust)
 import           Text.Read  (readMaybe)
-
-allTuples width height = [ ((x1,x2),G) | x1 <- [0..width], x2 <- [0..height]]
-
-empti = M.fromList [((0,0),G),((0,1),G),((0,2),G),((0,3),G),((1,0),G),((1,1),G),((1,2),G),((1,3),G),((2,0),G),((2,1),G),((2,2),G),((2,3),G),((3,0),G),((3,1),G),((3,2),G),((3,3),G)]
-
-full = M.fromList [((0,0),X),((0,1),O),((0,2),X),((0,3),O),((1,0),X),((1,1),O),((1,2),X),((1,3),O),((2,0),X),((2,1),O),((2,2),X),((2,3),O),((3,0),X),((3,1),O),((3,2),X),((3,3),O)]
-
-
-splitXrow = M.fromList [((0,0),X),((0,1),G),((0,2),X),((0,3),X),((1,0),G),((1,1),G),((1,2),G),((1,3),G),((2,0),G),((2,1),G),((2,2),G),((2,3),G),((3,0),G),((3,1),G),((3,2),G),((3,3),G)]
-
-vertMap = M.fromList [((0,0),G),((0,1),G),((0,2),G),((0,3),X),((1,0),G),((1,1),G),((1,2),G),((1,3),X),((2,0),G),((2,1),G),((2,2),G),((2,3),X),((3,0),G),((3,1),G),((3,2),G),((3,3),X)]
-
-horzMap = M.fromList [((0,0),G),((0,1),G),((0,2),G),((0,3),G),((1,0),G),((1,1),G),((1,2),G),((1,3),G),((2,0),G),((2,1),G),((2,2),G),((2,3),G),((3,0),X),((3,1),X),((3,2),X),((3,3),X)]
-
-leftUpRight = M.fromList [((0,0),X),((0,1),G),((0,2),G),((0,3),G),((1,0),G),((1,1),X),((1,2),G),((1,3),G),((2,0),G),((2,1),G),((2,2),X),((2,3),G),((3,0),G),((3,1),G),((3,2),G),((3,3),X)]
-
-leftDownRight = M.fromList [((0,0),G),((0,1),G),((0,2),G),((0,3),X),((1,0),G),((1,1),G),((1,2),X),((1,3),G),((2,0),G),((2,1),X),((2,2),G),((2,3),G),((3,0),X),((3,1),G),((3,2),G),((3,3),G)]
-
-pXPlay = M.fromList [((0,0),G),((0,1),G),((0,2),G),((0,3),X),((1,0),G),((1,1),G),((1,2),G),((1,3),G),((2,0),G),((2,1),G),((2,2),G),((2,3),G),((3,0),G),((3,1),G),((3,2),G),((3,3),G)]
-
-colZeroFull = M.fromList [((0,0),O),((0,1),X),((0,2),O),((0,3),X),((1,0),G),((1,1),G),((1,2),G),((1,3),G),((2,0),G),((2,1),G),((2,2),G),((2,3),G),((3,0),G),((3,1),G),((3,2),G),((3,3),G)]
-
-playerXTurn = Board 4 4 empti
-
-playerOTurn = Board 4 4 pXPlay
-
-colZeroFullBoard = Board 4 4 colZeroFull
-
-diagWinner = Board 4 4 leftUpRight
-
 
 -- Data Types ---------------------------------------------------
 
@@ -65,7 +33,8 @@ instance Show Board where
 
 
 -- Functions ----------------------------------------------------
-
+-- allTuples returns a list of tuples where the player
+allTuples width height = [ ((x1,x2),G) | x1 <- [0..width], x2 <- [0..height]]
 
 -- Dictates what to print given the Player in the tile
 showTile :: Maybe Player -> Char
@@ -115,13 +84,13 @@ horizontal :: Board -> Player -> Integer -> Bool
 horizontal _ _ 0 = False
 horizontal board player totalRowNum
 -- checkHoriz is being passed getRow totalRownum from map given by filtering out player's tiles from given board
-	| checkHoriz (M.toList (getRow (boardTiles board) totalRowNum)) player = True
+	| checkLine (M.toList (getRow (boardTiles board) totalRowNum)) player = True
 	| otherwise = horizontal board player (totalRowNum - 1)
 
 
 -- recurse over each row ** Probably have to change the fact that im filtering out one player 
 vertical :: Board -> Player -> Integer -> Bool
-vertical board player 0 = checkHoriz (M.toList (getColumn (boardTiles board) 0)) player
+vertical board player 0 = checkLine (M.toList (getColumn (boardTiles board) 0)) player
 vertical board player totalColNum
 -- checkLine is being passed getRow totalRownum from map given by filtering out player's tiles from given board
 	| checkLine (M.toList (getColumn (boardTiles board) totalColNum)) player = True
@@ -177,38 +146,43 @@ check board player
 	| diagonal board player (boardColumns board) = True
 	| otherwise = False
 
- 
+ -- Check to see if player 1 or player 2 won, if no one has won, return 0
 whoWon :: Board -> Int
 whoWon board 
     | check board X = 1
     | check board O = 2
     | otherwise = 0
 
+-- Check to see if the game is a draw (i.e. the board is full)
 isDraw :: Board -> Bool
 isDraw board
     | (numPlays board) >= (numSpaces board) = True
     | otherwise = False
 
+-- Get the number of total plays so far
 numPlays :: Board -> Integer
 numPlays board = (pXPlays board) + (pOPlays board)
 
+-- Get the total playable space on the board
 numSpaces :: Board -> Integer 
 numSpaces board = (boardColumns board) * (boardRows board)
 
-
+-- Get the player who needs to play next
 whosTurn :: Board -> Player
 whosTurn board 
 	| (pXPlays board) == (pOPlays board) = X
     | otherwise = O
 
-
+-- Get number of plays Player 1 has made
 pXPlays :: Board -> Integer
 pXPlays board = foldr (\x y -> 1 + y) 0 (M.toList (filterPlayers (boardTiles board) X))
 
+-- Get number of plays Player 2 has made
 pOPlays :: Board -> Integer
 pOPlays board = foldr (\x y -> 1 + y) 0 (M.toList (filterPlayers (boardTiles board) O))
 
 
+-- Get the next players move for the one player game
 getMoveAiGame :: Player -> Board -> IO Integer
 getMoveAiGame player board  
 	| player == X = 
@@ -222,7 +196,8 @@ getMoveAiGame player board
     | otherwise = 
     	do 
     		getAiMove board
-  
+
+-- Compute the next move that the AI will make 
 getAiMove :: Board -> IO Integer
 getAiMove board = 
 	do
@@ -230,14 +205,17 @@ getAiMove board =
 		col <- getCol tile
 		return col
 
+-- Get the column from a given tile
 getCol :: ((Integer, Integer), Player) -> IO Integer
 getCol ((x, y), player) = do 
 	return y
 
+-- Get the rightmost tile Player 1 has placed 
 getPlayerOneTile :: Board -> IO ((Integer, Integer), Player)
 getPlayerOneTile board = do
     return (last (M.toList (filterPlayers (boardTiles board) X)))
 
+-- Get the current players next move
 getMove :: Player -> IO Integer
 getMove player = 
 	do
@@ -248,6 +226,7 @@ getMove player =
 			Just x -> return x
 			Nothing -> putStrLn "Invalid number entered" >> getMove player 
 
+-- Check if a move is legal
 isLegalMove :: Board -> Integer -> IO Bool
 isLegalMove board col = 
 	do
@@ -255,6 +234,7 @@ isLegalMove board col =
 		putStrLn (moveReply valid)
 		return valid
 
+-- Check if the given column has a free space
 hasFreeSpace :: Board -> Integer -> Bool
 hasFreeSpace board col 
 	| (M.lookup (0, col) (boardTiles board)) == Just G = True
@@ -262,18 +242,22 @@ hasFreeSpace board col
 	| (M.lookup (0, col) (boardTiles board)) == Just O = False
 	| otherwise = False
 
+-- Prints the reply for a valid or non valid move 
 moveReply :: Bool -> String 
 moveReply valid 
 	| valid = ""
 	| otherwise = "Illegal Move! Try again... "
 
+-- Take the current players move and update the board accordingly
 placeMove :: Board -> Integer -> Player -> Board 
 placeMove board col player = Board (boardRows board) (boardColumns board) (M.insert (row,col) player (boardTiles board))
 	where row = nextFreeRow board player col
 
+-- Get the next unoccupied row in a given column
 nextFreeRow :: Board -> Player -> Integer -> Integer
 nextFreeRow board player column = findFreeRow board column ((boardRows board)-1)
 
+-- Get the first row that does not contain a played tile in a given column 
 findFreeRow :: Board -> Integer -> Integer -> Integer  
 findFreeRow _ _ 0 = 0
 findFreeRow board column row 
