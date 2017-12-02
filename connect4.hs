@@ -3,6 +3,7 @@ import           Data.Map   (Map)
 import qualified Data.Map   as M
 import           Data.Maybe (catMaybes, fromMaybe, listToMaybe, fromJust)
 import           Data.Ord   (comparing)
+import           Text.Read  (readMaybe)
 
 allTuples width height = [ ((x1,x2),G) | x1 <- [0..width], x2 <- [0..height]]
 
@@ -164,7 +165,11 @@ getMove player =
 		putStr (show player)
 		putStrLn ", please make your move!"
 		col <- getLine
-		return (read col::Integer) 
+		case readMaybe col :: Maybe Integer of
+			Just x -> return x
+			Nothing -> putStrLn "Invalid number entered" >> getMove player
+  
+
 
 isLegalMove :: Board -> Integer -> IO Bool
 isLegalMove board col = 
@@ -185,12 +190,6 @@ moveReply valid
 	| valid = ""
 	| otherwise = "Illegal Move! Try again... "
 
-
-{- For place move...
-need to find the first free row - so need a helper method that loops through the boards
-rows, starting at the largest row, and checking the value at current row, column. 
-Once we have the first free row, need to call update on map and create a new board with the new map.-}
-
 placeMove :: Board -> Integer -> Player -> Board 
 placeMove board col player = Board (boardRows board) (boardColumns board) (M.insert (row,col) player (boardTiles board))
 	where row = nextFreeRow board player col
@@ -206,10 +205,6 @@ findFreeRow board column row
     | (M.lookup (row, column) (boardTiles board)) == Just O = findFreeRow board column (row-1)
 	| otherwise = findFreeRow board column (row-1)
 
---TODO: implement
--- isDraw
--- printBoard
-
 go :: Board -> IO ()
 go board
 	| whoWon board == 1 = putStrLn "Player One Wins!"
@@ -224,6 +219,9 @@ go board
         go nextBoard
 
 
+main :: IO ()
+main = 
+	go (chooseSizeBoard 7 6)
 
 
 
