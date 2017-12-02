@@ -62,6 +62,9 @@ get row column = M.lookup (row, column) . boardTiles
 emptyBoard :: Integer -> Integer -> Board
 emptyBoard rows columns = Board rows columns empti
 
+chooseSizeBoard :: Integer -> Integer -> Board
+chooseSizeBoard rows columns = Board rows columns (M.fromList (allTuples columns rows))
+
 -- getTiles :: Board -> Map ((Integer,Integer), Player)
 getTiles board = (boardTiles board)
 
@@ -121,11 +124,11 @@ hasDiagonal ((x,y),z) board n dir
 
 
 verRight (x,y) p boardTiles
-	| fromJust (M.lookup (x+1,y+1) boardTiles) == p = True
+	| (M.lookup (x+1,y+1) boardTiles) == Just p = True
 	| otherwise = False
 
 verLeft (x,y) p boardTiles
-	| fromJust (M.lookup (x-1,y+1) boardTiles) == p = True
+	| (M.lookup (x-1,y+1) boardTiles) == Just p = True
 	| otherwise = False
 
 
