@@ -9,6 +9,9 @@ allTuples width height = [ ((x1,x2),G) | x1 <- [0..width], x2 <- [0..height]]
 
 empti = M.fromList [((0,0),G),((0,1),G),((0,2),G),((0,3),G),((1,0),G),((1,1),G),((1,2),G),((1,3),G),((2,0),G),((2,1),G),((2,2),G),((2,3),G),((3,0),G),((3,1),G),((3,2),G),((3,3),G)]
 
+full = M.fromList [((0,0),X),((0,1),O),((0,2),X),((0,3),O),((1,0),X),((1,1),O),((1,2),X),((1,3),O),((2,0),X),((2,1),O),((2,2),X),((2,3),O),((3,0),X),((3,1),O),((3,2),X),((3,3),O)]
+
+
 splitXrow = M.fromList [((0,0),X),((0,1),G),((0,2),X),((0,3),X),((1,0),G),((1,1),G),((1,2),G),((1,3),G),((2,0),G),((2,1),G),((2,2),G),((2,3),G),((3,0),G),((3,1),G),((3,2),G),((3,3),G)]
 
 vertMap = M.fromList [((0,0),G),((0,1),G),((0,2),G),((0,3),X),((1,0),G),((1,1),G),((1,2),G),((1,3),X),((2,0),G),((2,1),G),((2,2),G),((2,3),X),((3,0),G),((3,1),G),((3,2),G),((3,3),X)]
@@ -31,9 +34,11 @@ colZeroFullBoard = Board 4 4 colZeroFull
 
 diagWinner = Board 4 4 leftUpRight
 
+
 -- Data Types ---------------------------------------------------
 
 -- L represents checking Left when looking for diagonal wins, R for checking Right
+fullBoard = Board 4 4 full
 data Dir = L | R
 	deriving (Eq, Ord, Enum)
  
@@ -116,7 +121,7 @@ horizontal board player totalRowNum
 
 -- recurse over each row ** Probably have to change the fact that im filtering out one player 
 vertical :: Board -> Player -> Integer -> Bool
-vertical _ _ 0 = False
+vertical board player 0 = checkHoriz (M.toList (getColumn (boardTiles board) 0)) player
 vertical board player totalColNum
 -- checkLine is being passed getRow totalRownum from map given by filtering out player's tiles from given board
 	| checkLine (M.toList (getColumn (boardTiles board) totalColNum)) player = True
@@ -179,6 +184,17 @@ whoWon board
     | check board O = 2
     | otherwise = 0
 
+isDraw :: Board -> Bool
+isDraw board
+    | (numPlays board) >= (numSpaces board) = True
+    | otherwise = False
+
+numPlays :: Board -> Integer
+numPlays board = (pXPlays board) + (pOPlays board)
+
+numSpaces :: Board -> Integer 
+numSpaces board = (boardColumns board) * (boardRows board)
+
 
 whosTurn :: Board -> Player
 whosTurn board 
@@ -186,12 +202,29 @@ whosTurn board
     | otherwise = O
 
 
-pXPlays :: Board -> Int
+pXPlays :: Board -> Integer
 pXPlays board = foldr (\x y -> 1 + y) 0 (M.toList (filterPlayers (boardTiles board) X))
 
-pOPlays :: Board -> Int
+pOPlays :: Board -> Integer
 pOPlays board = foldr (\x y -> 1 + y) 0 (M.toList (filterPlayers (boardTiles board) O))
 
+
+getMoveAiGame :: Player -> Board -> IO Integer
+getMoveAiGame player board  
+	| player == X = 
+		do
+		    putStr (show player)
+		    putStrLn ", please make your move!"
+		    col <- getLine
+		    case readMaybe col :: Maybe Integer of
+			    Just x -> return x
+			    Nothing -> putStrLn "Invalid number entered" >> getMoveAiGame player board
+    | otherwise = 
+    	do 
+    		return (getAiMove board)
+  
+getAiMove :: Board -> Integer
+getAiMove board = 0
 
 getMove :: Player -> IO Integer
 getMove player = 
@@ -201,7 +234,7 @@ getMove player =
 		col <- getLine
 		case readMaybe col :: Maybe Integer of
 			Just x -> return x
-			Nothing -> putStrLn "Invalid number entered" >> getMove player
+			Nothing -> putStrLn "Invalid number entered" >> getMove player 
 
 isLegalMove :: Board -> Integer -> IO Bool
 isLegalMove board col = 
@@ -244,8 +277,9 @@ go :: Board -> IO ()
 go board
 	| whoWon board == 1 = putStrLn "Player One Wins!"
     | whoWon board == 2 = putStrLn "Player Two Wins!"
+    | isDraw board = putStrLn "It's a draw!"
     | otherwise = do 
-        col <- getMove (whosTurn board)
+        col <- getMove (whosTurn board) 
         legalMove <- isLegalMove board col
         let nextBoard  
         	| legalMove = placeMove board col (whosTurn board)
@@ -254,9 +288,27 @@ go board
         go nextBoard
 
 
+goAi :: Board -> IO ()
+goAi board
+	| whoWon board == 1 = putStrLn "Player One Wins!"
+    | whoWon board == 2 = putStrLn "Player Two Wins!"
+    | isDraw board = putStrLn "It's a draw!"
+    | otherwise = do 
+        col <- getMoveAiGame (whosTurn board) board
+        legalMove <- isLegalMove board col
+        let nextBoard  
+        	| legalMove = placeMove board col (whosTurn board)
+        	| otherwise = board
+        putStrLn ("\n" ++ show nextBoard)
+        goAi nextBoard
+
+
 main :: IO ()
-main = 
-	go (chooseSizeBoard 7 6)
+main = do
+    putStrLn "One player: Type '1'"
+    putStrLn "Two players: Type '2'"
+    players <- getLine 
+    if (read players) == 2 then go (chooseSizeBoard 7 6) else goAi (chooseSizeBoard 7 6)
 
 
 
