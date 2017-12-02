@@ -286,7 +286,7 @@ go board
 
 goAi :: Board -> IO ()
 goAi board
-	| whoWon board == 1 = putStrLn "Player One Wins!"
+    | whoWon board == 1 = putStrLn "Player One Wins!"
     | whoWon board == 2 = putStrLn "Player Two Wins!"
     | isDraw board = putStrLn "It's a draw!"
     | otherwise = do 
